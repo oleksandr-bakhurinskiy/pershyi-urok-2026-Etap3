@@ -7,41 +7,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* Контейнер для PDF, щоб сторінка не "стрибала" */
-        .pdf-wrapper {
-            min-height: 200px;
-            transition: all 0.3s ease;
-        }
-
-        /* Клас для плаваючого PDF-документа при скролінгу */
-        .sticky-pdf {
-            position: fixed !important;
-            top: 80px; 
-            right: 20px;
-            width: 450px !important; /* Ширше для зручного читання тексту */
-            height: 70vh !important; /* Висота адаптивна до екрану */
-            z-index: 1001;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 2px solid #fff;
-            border-radius: 8px;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
         body { padding: 20px; background-color: #f8f9fa; }
         .criterion-group { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .sticky-header { position: sticky; top: 0; background: #f8f9fa; z-index: 1000; padding: 10px 0; border-bottom: 2px solid #dee2e6; }
         #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .hidden { display: none !important; }
         
-        /* Стандартний контейнер для PDF (до скролінгу) */
+        /* Збільшений контейнер для PDF */
         .pdf-container { 
             position: relative; 
-            height: 600px; /* Фіксована висота замість пропорцій відео */
+            height: 80vh; /* Висота займає 80% вікна браузера */
             width: 100%;
             overflow: hidden; 
             border-radius: 8px; 
@@ -56,6 +31,19 @@
             height: 100%; 
             border: 0; 
         }
+
+        /* Накладка, що ховає кнопку "Відкрити у новому вікні" Google Drive */
+        .drive-popout-blocker {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background-color: rgba(25, 25, 25, 1); /* Темний колір під фон шапки Google Drive */
+            z-index: 10;
+            border-top-right-radius: 8px;
+        }
+
         .empty-pdf { background: #e9ecef; display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 8px; color: #6c757d; }
     </style>
 </head>
@@ -69,7 +57,6 @@
 
 <div class="container hidden" id="mainContent">
     <div class="sticky-header mb-4 d-flex justify-content-between align-items-center">
-        <!-- Змінено заголовок -->
         <h2 class="text-primary m-0">Етап 1: Оцінювання матеріалів (PDF)</h2>
         <div id="userEmailDisplay" class="badge bg-secondary p-2"></div>
     </div>
@@ -81,14 +68,11 @@
                 <option value="">Завантаження списку...</option>
             </select>
             
-            <div id="pdfWrapper" class="pdf-wrapper">
-                <div id="pdfDisplay">
-                    <div class="empty-pdf">Оберіть учасника, щоб переглянути PDF-документ</div>
-                </div>
+            <div id="pdfDisplay">
+                <div class="empty-pdf">Оберіть учасника, щоб переглянути PDF-документ</div>
             </div>
         </div>
 
-        <!-- ТУТ ЗАЛИШАЄТЬСЯ ВАШ КОД З ТАБЛИЦЯМИ КРИТЕРІЇВ (БЕЗ ЗМІН) -->
         <div class="container mt-4">
             <div class="criterion-group border p-3 mb-4 rounded bg-white shadow-sm">
                 <h4 class="text-primary border-bottom pb-2">1. Педагогічне мислення і розуміння питання (макс. 30 балів)</h4>
@@ -204,7 +188,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsPiMDRC5Zy92j5DaAeC6WMT-oZuhaj15e1VmFtBFfOLQTz8ct8A1pPJJWDRN2JCs_/exec'; 
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyV_RETtuyNX4yEGrYSSaCzWkPTBSdeR9pwsF4HweywzUdy5CZoLs8xcvWsp15v9pgtZQ/exec'; 
     let currentUserEmail = "";
     let participantsData = []; 
     
@@ -310,11 +294,9 @@
             .catch(err => console.error("Помилка завантаження учасників:", err));
     }
 
-    // НОВА ФУНКЦІЯ: Перетворення посилання Google Drive на формат попереднього перегляду
     function formatPdfUrl(url) {
         if (!url) return null;
         
-        // Якщо це звичайне посилання Google Drive (view або sharing)
         if (url.includes('drive.google.com/file/d/')) {
             const match = url.match(/\/d\/(.*?)\//) || url.match(/\/d\/(.*?)(?:\?|$)/);
             if (match && match[1]) {
@@ -322,7 +304,6 @@
             }
         }
         
-        // Для прямих посилань повертаємо як є
         return url;
     }
 
@@ -339,7 +320,12 @@
         const pdfUrl = formatPdfUrl(rawUrl);
         
         if (pdfUrl) {
-            pdfDiv.innerHTML = `<div class="pdf-container"><iframe src="${pdfUrl}" allow="autoplay"></iframe></div>`;
+            // Додано блок .drive-popout-blocker поверх iframe
+            pdfDiv.innerHTML = `
+                <div class="pdf-container">
+                    <iframe src="${pdfUrl}" allow="autoplay"></iframe>
+                    <div class="drive-popout-blocker"></div>
+                </div>`;
         } else {
             pdfDiv.innerHTML = '<div class="alert alert-warning mt-2">PDF не знайдено або посилання некоректне</div>';
         }
@@ -385,26 +371,6 @@
             btn.textContent = originalText;
         });
     };
-
-    // Оновлена логіка скролінгу для PDF
-    window.addEventListener('scroll', function() {
-        const pdfWrapper = document.getElementById('pdfWrapper');
-        const pdfDisplay = document.getElementById('pdfDisplay');
-        const participantSelect = document.getElementById('participantName');
-        
-        if (participantSelect.value === "") return;
-
-        const wrapperRect = pdfWrapper.getBoundingClientRect();
-        const container = pdfDisplay.querySelector('.pdf-container');
-
-        if (container) {
-            if (wrapperRect.top < 0) {
-                container.classList.add('sticky-pdf');
-            } else {
-                container.classList.remove('sticky-pdf');
-            }
-        }
-    });
 </script>
 </body>
 </html>
