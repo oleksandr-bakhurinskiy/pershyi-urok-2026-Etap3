@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конкурс "Перший урок" - Оцінювання</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* Контейнер для PDF, щоб сторінка не "стрибала" */
+        .pdf-wrapper {
+            min-height: 200px;
+            transition: all 0.3s ease;
+        }
+
+        /* Клас для плаваючого PDF-документа при скролінгу */
+        .sticky-pdf {
+            position: fixed !important;
+            top: 80px; 
+            right: 20px;
+            width: 450px !important; /* Ширше для зручного читання тексту */
+            height: 70vh !important; /* Висота адаптивна до екрану */
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        body { padding: 20px; background-color: #f8f9fa; }
+        .criterion-group { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .sticky-header { position: sticky; top: 0; background: #f8f9fa; z-index: 1000; padding: 10px 0; border-bottom: 2px solid #dee2e6; }
+        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .hidden { display: none !important; }
+        
+        /* Стандартний контейнер для PDF (до скролінгу) */
+        .pdf-container { 
+            position: relative; 
+            height: 600px; /* Фіксована висота замість пропорцій відео */
+            width: 100%;
+            overflow: hidden; 
+            border-radius: 8px; 
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+        }
+        .pdf-container iframe { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            border: 0; 
+        }
+        .empty-pdf { background: #e9ecef; display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 8px; color: #6c757d; }
+    </style>
+</head>
+<body>
+
+<div id="authOverlay">
+    <h3 class="mb-4">Конкурс "Перший урок" 2026</h3>
+    <p class="text-muted mb-4">Будь ласка, авторизуйтесь для доступу до оцінювання</p>
+    <div id="buttonDiv"></div>
+</div>
+
+<div class="container hidden" id="mainContent">
+    <div class="sticky-header mb-4 d-flex justify-content-between align-items-center">
+        <!-- Змінено заголовок -->
+        <h2 class="text-primary m-0">Етап 1: Оцінювання матеріалів (PDF)</h2>
+        <div id="userEmailDisplay" class="badge bg-secondary p-2"></div>
+    </div>
+
+    <form id="evaluationForm">
+        <div class="criterion-group">
+            <label class="form-label fw-bold">1. Оберіть учасника:</label>
+            <select class="form-select mb-3" id="participantName" name="participantName" required>
+                <option value="">Завантаження списку...</option>
+            </select>
+            
+            <div id="pdfWrapper" class="pdf-wrapper">
+                <div id="pdfDisplay">
+                    <div class="empty-pdf">Оберіть учасника, щоб переглянути PDF-документ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ТУТ ЗАЛИШАЄТЬСЯ ВАШ КОД З ТАБЛИЦЯМИ КРИТЕРІЇВ (БЕЗ ЗМІН) -->
+        <div class="container mt-4">
+            <!-- Блок критеріїв 1 -->
+            <div class="criterion-group border p-3 mb-4 rounded bg-white shadow-sm">
+                <h4 class="text-primary border-bottom pb-2">1. Педагогічне мислення і розуміння питання (макс. 30 балів)</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th class="text-start" style="width: 52%;">Підкритерій</th>
+                                <th style="width: 8%;">0</th><th style="width: 8%;">1</th><th style="width: 8%;">2</th><th style="width: 8%;">3</th><th style="width: 8%;">4</th><th style="width: 8%;">5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1.1. Відповідь саме на поставлене педагогічне питання</td><td class="text-center"><input type="radio" name="s1_1" value="0" required></td><td class="text-center"><input type="radio" name="s1_1" value="1"></td><td class="text-center"><input type="radio" name="s1_1" value="2"></td><td class="text-center"><input type="radio" name="s1_1" value="3"></td><td class="text-center"><input type="radio" name="s1_1" value="4"></td><td class="text-center"><input type="radio" name="s1_1" value="5"></td></tr>
+                            <!-- Інші рядки залишені для лаконічності, вставте ваші таблиці тут -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="criterion-group border p-3 mb-4 rounded bg-white shadow-sm">
+                <h4 class="text-primary border-bottom pb-2">Коментар журі (необов'язково)</h4>
+                <div class="mb-3">
+                    <label for="juryComment" class="form-label text-muted">Ви можете залишити відгук або примітки до оцінки:</label>
+                    <textarea class="form-control" id="juryComment" name="juryComment" rows="3" placeholder="Введіть ваш коментар тут..."></textarea>
+                </div>
+            </div>
+
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-100 mb-5">Зберегти оцінку</button>
+    </form>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsPiMDRC5Zy92j5DaAeC6WMT-oZuhaj15e1VmFtBFfOLQTz8ct8A1pPJJWDRN2JCs_/exec'; 
+    let currentUserEmail = "";
+    let participantsData = []; 
+    
+    const juryCategories = {
+      "obakhurinskyi@ipp.org.ua": "А",
+      "ihor.com@ipp.org.ua": "А",
+      "bah.sasha1@gmail.com": "У",
+      "okolotylo@ipp.org.ua": "А",
+      "bondarevamaya230692@gmail.com": "А",
+      "vtymenko@ipp.org.ua": "Б",
+      "paskoo012218@gmail.com" : "Б",
+      "nataliabondarenko098@gmail.com": "Б",
+      "pvmnapn@gmail.com" : "Б",
+      "largarbuzenko@gmail.com": "Б",
+      "buchkivska1810@gmail.com": "Б",
+      "onelkass72@gmail.com" : "А",
+      "ohuryn@gmail.com": "У",
+      "tkacenkonatalia05@gmail.com": "А",
+      "galasantonina966@gmail.com": "А",
+      "kaluznaya1977@gmail.com": "А",
+      "larisash1771@gmail.com" : "А"
+    };
+
+    window.onload = function () {
+        google.accounts.id.initialize({
+            client_id: "829527564010-3cct1qlnv3cdlp88c5b54uio8b1j93rb.apps.googleusercontent.com",
+            callback: handleCredentialResponse,
+            ux_mode: 'popup', 
+            context: 'signin',
+            itp_support: true 
+        });
+        
+        google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large", width: 250, shape: "pill" }
+        );
+    };
+
+    function handleCredentialResponse(response) {
+        try {
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/').trim();
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            const payload = JSON.parse(jsonPayload);
+            currentUserEmail = payload.email.toLowerCase();
+            
+            const myCategory = juryCategories[currentUserEmail];
+
+            if (myCategory) {
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                
+                const displayCategory = myCategory === "У" ? "У (всі)" : myCategory;
+                document.getElementById('userEmailDisplay').innerHTML = `
+                    ${currentUserEmail} 
+                    <span class="badge bg-warning text-dark ms-2">Журі категорії ${displayCategory}</span>
+                `;
+                
+                loadParticipants();
+            } else {
+                const authMessage = document.querySelector('#authOverlay p');
+                authMessage.innerHTML = `<b style="color:red;">Доступ обмежено!</b><br>Адреса ${currentUserEmail} відсутня в списку журі.`;
+                document.getElementById('buttonDiv').style.display = 'none';
+                
+                if (!document.getElementById('retryBtn')) {
+                    const retryBtn = document.createElement('button');
+                    retryBtn.id = 'retryBtn';
+                    retryBtn.textContent = "Спробувати інший акаунт";
+                    retryBtn.className = "btn btn-outline-secondary mt-3";
+                    retryBtn.onclick = () => location.reload();
+                    document.getElementById('authOverlay').appendChild(retryBtn);
+                }
+            }
+        } catch (error) {
+            console.error("Помилка авторизації:", error);
+            alert("Сталася помилка при вході.");
+        }
+    }
+
+    function loadParticipants() {
+        const url = `${GOOGLE_SCRIPT_URL}?action=getParticipants&email=${currentUserEmail}&t=${new Date().getTime()}`;
+        fetch(url)
+            .then(res => res.json())
+            .then(participants => {
+                participantsData = participants; 
+                const select = document.getElementById('participantName');
+                if (participants.length === 0) {
+                    select.innerHTML = '<option value="">Всі доступні учасники оцінені</option>';
+                    return;
+                }
+                select.innerHTML = '<option value="">-- Оберіть учасника --</option>';
+                
+                participants.forEach((p, index) => {
+                    let opt = document.createElement('option');
+                    opt.value = index; 
+                    opt.textContent = `Учасник ${p[3]}`;
+                    select.appendChild(opt);
+                });
+            })
+            .catch(err => console.error("Помилка завантаження учасників:", err));
+    }
+
+    // НОВА ФУНКЦІЯ: Перетворення посилання Google Drive на формат попереднього перегляду
+    function formatPdfUrl(url) {
+        if (!url) return null;
+        
+        // Якщо це звичайне посилання Google Drive (view або sharing)
+        if (url.includes('drive.google.com/file/d/')) {
+            const match = url.match(/\/d\/(.*?)\//) || url.match(/\/d\/(.*?)(?:\?|$)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/file/d/${match[1]}/preview`;
+            }
+        }
+        
+        // Для прямих посилань повертаємо як є
+        return url;
+    }
+
+    document.getElementById('participantName').onchange = function() {
+        const index = this.value;
+        const pdfDiv = document.getElementById('pdfDisplay');
+        
+        if (index === "") {
+            pdfDiv.innerHTML = '<div class="empty-pdf">Оберіть учасника...</div>';
+            return;
+        }
+        
+        const rawUrl = participantsData[index][2]; 
+        const pdfUrl = formatPdfUrl(rawUrl);
+        
+        if (pdfUrl) {
+            pdfDiv.innerHTML = `<div class="pdf-container"><iframe src="${pdfUrl}" allow="autoplay"></iframe></div>`;
+        } else {
+            pdfDiv.innerHTML = '<div class="alert alert-warning mt-2">PDF не знайдено або посилання некоректне</div>';
+        }
+    };
+
+    document.getElementById('evaluationForm').onsubmit = function(e) {
+        e.preventDefault();
+        const selectedIndex = document.getElementById('participantName').value;
+        if (selectedIndex === "") return;
+
+        const btn = e.target.querySelector('button');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Зберігаємо...';
+
+        const formData = new FormData(this);
+        const data = {
+            email: currentUserEmail,
+            participantName: participantsData[selectedIndex][0],
+            scores: {},
+            comment: document.getElementById('juryComment').value
+        };
+
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('s')) data.scores[key] = value;
+        }
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(data)
+        }).then(() => {
+            alert("Оцінку збережено!");
+            this.reset(); 
+            document.getElementById('pdfDisplay').innerHTML = '<div class="empty-pdf">Оберіть наступного учасника...</div>';
+            loadParticipants(); 
+            btn.disabled = false;
+            btn.textContent = originalText;
+            window.scrollTo(0, 0);
+        }).catch(err => {
+            alert("Помилка: " + err);
+            btn.disabled = false;
+            btn.textContent = originalText;
+        });
+    };
+
+    // Оновлена логіка скролінгу для PDF
+    window.addEventListener('scroll', function() {
+        const pdfWrapper = document.getElementById('pdfWrapper');
+        const pdfDisplay = document.getElementById('pdfDisplay');
+        const participantSelect = document.getElementById('participantName');
+        
+        if (participantSelect.value === "") return;
+
+        const wrapperRect = pdfWrapper.getBoundingClientRect();
+        const container = pdfDisplay.querySelector('.pdf-container');
+
+        if (container) {
+            if (wrapperRect.top < 0) {
+                container.classList.add('sticky-pdf');
+            } else {
+                container.classList.remove('sticky-pdf');
+            }
+        }
+    });
+</script>
+</body>
+</html>
