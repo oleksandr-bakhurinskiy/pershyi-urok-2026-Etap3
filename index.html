@@ -299,40 +299,62 @@
             .catch(err => console.error("Помилка завантаження учасників:", err));
     }
 
-    function formatPdfUrl(url) {
+    // Універсальна функція для обробки посилань (використовуємо Google Docs Viewer для PDF)
+    function formatEmbedUrl(url) {
         if (!url) return null;
         
+        // 1. Перевірка на YouTube
+        const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const ytMatch = url.match(ytRegExp);
+        if (ytMatch && ytMatch[2].length === 11) {
+            return `https://www.youtube.com/embed/${ytMatch[2]}`;
+        }
+        
+        // 2. Перевірка на Google Drive (PDF)
         if (url.includes('drive.google.com/file/d/')) {
-            const match = url.match(/\/d\/(.*?)\//) || url.match(/\/d\/(.*?)(?:\?|$)/);
-            if (match && match[1]) {
-                return `https://drive.google.com/file/d/${match[1]}/preview`;
+            const driveMatch = url.match(/\/d\/(.*?)\//) || url.match(/\/d\/(.*?)(?:\?|$)/);
+            if (driveMatch && driveMatch[1]) {
+                const fileId = driveMatch[1];
+                // Використовуємо альтернативний переглядач, щоб уникнути помилки конфлікту акаунтів
+                return `https://docs.google.com/viewer?url=https://drive.google.com/uc?export=download&id=${fileId}&embedded=true`;
             }
         }
         
         return url;
     }
 
+    // Обробник вибору учасника
     document.getElementById('participantName').onchange = function() {
         const index = this.value;
-        const pdfDiv = document.getElementById('pdfDisplay');
+        const mediaDiv = document.getElementById('pdfDisplay');
         
         if (index === "") {
-            pdfDiv.innerHTML = '<div class="empty-pdf">Оберіть учасника...</div>';
+            mediaDiv.innerHTML = '<div class="empty-pdf">Оберіть учасника...</div>';
             return;
         }
         
         const rawUrl = participantsData[index][2]; 
-        const pdfUrl = formatPdfUrl(rawUrl);
+        const embedUrl = formatEmbedUrl(rawUrl);
+        const isYouTube = embedUrl && embedUrl.includes('youtube.com/embed');
         
-        if (pdfUrl) {
-            // Додано блок .drive-popout-blocker поверх iframe
-            pdfDiv.innerHTML = `
+        if (embedUrl) {
+            const popoutBlocker = isYouTube ? '' : '<div class="drive-popout-blocker"></div>';
+            
+            const fallbackLink = !isYouTube 
+                ? `<div class="mt-3 text-center">
+                     <p class="text-muted small mb-1">Файл не завантажився у вікні вище?</p>
+                     <a href="${rawUrl}" target="_blank" class="btn btn-sm btn-outline-primary">Відкрити PDF у новій вкладці</a>
+                   </div>` 
+                : '';
+            
+            mediaDiv.innerHTML = `
                 <div class="pdf-container">
-                    <iframe src="${pdfUrl}" allow="autoplay"></iframe>
-                    <div class="drive-popout-blocker"></div>
-                </div>`;
+                    <iframe src="${embedUrl}" allow="autoplay; fullscreen"></iframe>
+                    ${popoutBlocker}
+                </div>
+                ${fallbackLink}`;
         } else {
-            pdfDiv.innerHTML = '<div class="alert alert-warning mt-2">PDF не знайдено або посилання некоректне</div>';
+            mediaDiv.innerHTML = '<div class="alert alert-warning mt-2">Матеріал не знайдено або посилання некоректне</div>';
         }
     };
 
