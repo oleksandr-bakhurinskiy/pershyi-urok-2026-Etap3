@@ -62,7 +62,7 @@
 
 <div class="container hidden" id="mainContent">
     <div class="sticky-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="text-primary m-0">Етап 3: Оцінювання матеріалів (PDF)v5</h2>
+        <h2 class="text-primary m-0">Етап 3: Оцінювання матеріалів (PDF)v6</h2>
         <div id="userEmailDisplay" class="badge bg-secondary p-2"></div>
     </div>
 
@@ -300,6 +300,7 @@
     }
 
 
+    // Універсальна функція для обробки посилань
     function formatEmbedUrl(url) {
         if (!url) return null;
         
@@ -310,13 +311,17 @@
             return `https://www.youtube.com/embed/${ytMatch[2]}`;
         }
         
-        // 2. Якщо це пряме посилання на PDF (закінчується на .pdf)
+        // 2. Якщо це пряме посилання на PDF на вашому сервері
         if (url.toLowerCase().includes('.pdf')) {
-            // Видаляємо старі хеші (якщо є) і додаємо параметри для приховування панелей
-            return url.split('#')[0] + '#toolbar=0&navpanes=0';
+            // Очищаємо посилання від старих параметрів (якщо є)
+            const cleanUrl = url.split('#')[0];
+            // Кодуємо посилання, щоб Google Docs зміг його правильно прочитати
+            const encodedUrl = encodeURIComponent(cleanUrl);
+            // Повертаємо посилання через Google Docs Viewer для примусового показу на мобільних
+            return `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
         }
         
-        // 3. Для всіх інших посилань
+        // 3. Для всіх інших типів посилань
         return url;
     }
 
