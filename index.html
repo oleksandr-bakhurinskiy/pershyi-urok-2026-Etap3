@@ -62,7 +62,7 @@
 
 <div class="container hidden" id="mainContent">
     <div class="sticky-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="text-primary m-0">Етап 1: Оцінювання матеріалів (PDF)v2</h2>
+        <h2 class="text-primary m-0">Етап 1: Оцінювання матеріалів (PDF)v3</h2>
         <div id="userEmailDisplay" class="badge bg-secondary p-2"></div>
     </div>
 
@@ -300,26 +300,18 @@
     }
 
     // Універсальна функція для обробки посилань (використовуємо Google Docs Viewer для PDF)
+    // Функція для прямих посилань на сервер та відео YouTube
     function formatEmbedUrl(url) {
         if (!url) return null;
         
-        // 1. Перевірка на YouTube
+        // 1. Перевірка на YouTube (залишаємо, якщо на етапі є відео)
         const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const ytMatch = url.match(ytRegExp);
         if (ytMatch && ytMatch[2].length === 11) {
             return `https://www.youtube.com/embed/${ytMatch[2]}`;
         }
         
-        // 2. Перевірка на Google Drive (PDF)
-        if (url.includes('drive.google.com/file/d/')) {
-            const driveMatch = url.match(/\/d\/(.*?)\//) || url.match(/\/d\/(.*?)(?:\?|$)/);
-            if (driveMatch && driveMatch[1]) {
-                const fileId = driveMatch[1];
-                // Використовуємо альтернативний переглядач, щоб уникнути помилки конфлікту акаунтів
-                return `https://docs.google.com/viewer?url=https://drive.google.com/uc?export=download&id=${fileId}&embedded=true`;
-            }
-        }
-        
+        // 2. Для всіх інших посилань (ваші PDF на сервері) просто повертаємо лінк як є
         return url;
     }
 
