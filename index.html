@@ -14,22 +14,37 @@
         .hidden { display: none !important; }
         
         /* Збільшений контейнер для PDF */
+        /* Оновлений контейнер для PDF із жорсткими обмеженнями ширини */
         .pdf-container { 
             position: relative; 
-            height: 80vh; /* Висота займає 80% вікна браузера */
+            height: 80vh; 
             width: 100%;
+            max-width: 100%; /* Забороняє вилазити за межі екрана */
             overflow: hidden; 
             border-radius: 8px; 
             background: #e9ecef;
             border: 1px solid #dee2e6;
+            box-sizing: border-box;
         }
         .pdf-container iframe { 
             position: absolute; 
             top: 0; 
             left: 0; 
-            width: 100%; 
-            height: 100%; 
+            width: 100% !important; 
+            height: 100% !important; 
+            max-width: 100%;
             border: 0; 
+        }
+
+        /* Адаптація спеціально для мобільних телефонів */
+        @media (max-width: 768px) {
+            .criterion-group {
+                padding: 15px 10px; /* Зменшуємо бокові відступи з 20px до 10px, щоб дати більше місця PDF */
+            }
+            .pdf-container {
+                height: 70vh; /* Трохи зменшуємо висоту, щоб залишалося місце для прокрутки сторінки */
+                border-radius: 4px;
+            }
         }
 
         /* Накладка, що ховає кнопку "Відкрити у новому вікні" Google Drive */
@@ -45,10 +60,7 @@
         }
 
         .empty-pdf { background: #e9ecef; display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 8px; color: #6c757d; }
-        @media (max-width: 768px) {
-    .drive-popout-blocker {
-        display: none !important;
-    }
+
 }
     </style>
 </head>
@@ -62,7 +74,7 @@
 
 <div class="container hidden" id="mainContent">
     <div class="sticky-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="text-primary m-0">Етап 3: Оцінювання матеріалів (PDF)v6</h2>
+        <h2 class="text-primary m-0">Етап 3: Оцінювання матеріалів (PDF)v7</h2>
         <div id="userEmailDisplay" class="badge bg-secondary p-2"></div>
     </div>
 
